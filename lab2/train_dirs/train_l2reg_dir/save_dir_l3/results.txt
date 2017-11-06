@@ -1,0 +1,8 @@
+Running evaluation:  Validation
+Validation accuracy = 96.46
+Validation avg loss = 0.67
+
+
+Running evaluation:  Test
+Test accuracy = 96.45
+Test avg loss = 0.66
