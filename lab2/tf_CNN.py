@@ -25,11 +25,11 @@ class tf_CNN:
         net = tf.layers.max_pooling2d(net, pool_size=self.pool_size, strides=self.pool_strides, name='maxpool2')
 
         net = layers.flatten(net, scope='flatten')
-        net = tf.layers.dense(net, units=512, name='fc1', activation=tf.nn.relu, kernel_regularizer=self.regularizer)
-        net = tf.layers.dense(net, units=10, name='fc2', activation=None, kernel_regularizer=self.regularizer)
+        net = layers.fully_connected(net, num_outputs=512, scope='fc1', activation_fn=tf.nn.relu, weights_regularizer=self.regularizer)
+        net = layers.fully_connected(net, num_outputs=10, scope='fc2', activation_fn=None, weights_regularizer=self.regularizer)
 
         self.weights = tf.get_default_graph()
-        self.weights = self.weights.get_tensor_by_name(os.path.split(net.name)[0] + '/kernel:0')
+        self.weights = self.weights.get_tensor_by_name(os.path.split(net.name)[0] + '/weights:0')
 
         self.logits = net
         self.prediction = tf.nn.softmax(self.logits)

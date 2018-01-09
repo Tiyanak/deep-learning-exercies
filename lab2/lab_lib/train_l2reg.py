@@ -9,10 +9,10 @@ from lab2.lab_lib import nn
 from  lab2.lab_lib import layers
 
 DATA_DIR = 'C:\\Users\\Igor Farszky\\PycharmProjects\\duboko\\duboko_ucenje\\lab2\\train_dirs\\train_l2reg_dir\\data_dir'
-SAVE_DIR = "C:\\Users\\Igor Farszky\\PycharmProjects\\duboko\\duboko_ucenje\\lab2\\train_dirs\\train_l2reg_dir\\save_dir_l3"
+SAVE_DIR = "C:\\Users\\Igor Farszky\\PycharmProjects\\duboko\\duboko_ucenje\\lab2\\train_dirs\\train_l2reg_dir\\save_dir_test"
 
 config = {}
-config['max_epochs'] = 8
+config['max_epochs'] = 1
 config['batch_size'] = 50
 config['save_dir'] = SAVE_DIR
 config['weight_decay'] = 1e-1

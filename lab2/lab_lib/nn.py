@@ -72,7 +72,7 @@ def train(train_x, train_y, valid_x, valid_y, net, loss, config):
       solver_config = lr_policy[epoch]
     cnt_correct = 0
     #for i in range(num_batches):
-    # shuffle the data at the beggining of each epoch
+    # shuffle the dataset at the beggining of each epoch
     permutation_idx = np.random.permutation(num_examples)
     train_x = train_x[permutation_idx]
     train_y = train_y[permutation_idx]

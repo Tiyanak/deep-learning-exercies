@@ -36,7 +36,7 @@ def check_grad_inputs(layer, x, grad_out):
   """
   Args:
     layer: Layer object
-    x: ndarray tensor input data
+    x: ndarray tensor input dataset
     grad_out: ndarray tensor gradient from the next layer
   """
   grad_x_num = eval_numerical_gradient(layer.forward, x, grad_out)
@@ -48,7 +48,7 @@ def check_grad_params(layer, x, w, b, grad_out):
   """
   Args:
     layer: Layer object
-    x: ndarray tensor input data
+    x: ndarray tensor input dataset
     w: ndarray tensor layer weights
     b: ndarray tensor layer biases
     grad_out: ndarray tensor gradient from the next layer

@@ -9,7 +9,7 @@ from lab2.lab_lib import nn
 from lab2.lab_lib import layers
 
 DATA_DIR = 'C:\\Users\\Igor Farszky\\PycharmProjects\\duboko\\duboko_ucenje\\lab2\\train_dirs\\train_dir\\data_dir'
-SAVE_DIR = "C:\\Users\\Igor Farszky\\PycharmProjects\\duboko\\duboko_ucenje\\lab2\\train_dirs\\train_dir\\save_dir"
+SAVE_DIR = "C:\\Users\\Igor Farszky\\PycharmProjects\\duboko\\duboko_ucenje\\lab2\\train_dirs\\train_dir\\test_dir"
 
 config = {}
 config['max_epochs'] = 8

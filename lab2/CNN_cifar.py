@@ -1,13 +1,12 @@
 import tensorflow as tf
 import tensorflow.contrib.layers as layers
 import numpy as np
-import os
 from lab2.cifar_readdata import unpickle, shuffle_data, plot_training_progress, draw_conv_filters, draw_image
 import time
 from data import Random2DGaussian
 
-SAVE_DIR = "C:\\Users\\Igor Farszky\\PycharmProjects\\duboko\\duboko_ucenje\\lab2\\cifar\\results\\graphs"
-SAVE_DIR_FILTERS = "C:\\Users\\Igor Farszky\\PycharmProjects\\duboko\\duboko_ucenje\\lab2\\cifar\\results\\filters"
+SAVE_DIR = "C:\\Users\\Igor Farszky\\PycharmProjects\\duboko\\duboko_ucenje\\lab2\\cifar\\results\\test\\graphs"
+SAVE_DIR_FILTERS = "C:\\Users\\Igor Farszky\\PycharmProjects\\duboko\\duboko_ucenje\\lab2\\cifar\\results\\test\\filters"
 
 class CNN_cifar:
 
@@ -34,12 +33,12 @@ class CNN_cifar:
         net = tf.layers.max_pooling2d(net, pool_size=self.pool_size, strides=self.pool_strides, name='maxpool2')
 
         net = layers.flatten(net, scope='flatten')
-        net = tf.layers.dense(net, units=256, name='fc1', activation=tf.nn.relu, kernel_regularizer=self.regularizer)
-        net = tf.layers.dense(net, units=128, name='fc2', activation=tf.nn.relu, kernel_regularizer=self.regularizer)
-        net = tf.layers.dense(net, units=10, name='fc3', activation=None, kernel_regularizer=self.regularizer)
+        net = layers.fully_connected(net, num_outputs=256, scope='fc1', activation_fn=tf.nn.relu, weights_regularizer=self.regularizer)
+        net = layers.fully_connected(net, num_outputs=128, scope='fc2', activation_fn=tf.nn.relu, weights_regularizer=self.regularizer)
+        net = layers.fully_connected(net, num_outputs=10, scope='fc3', activation_fn=None, weights_regularizer=self.regularizer)
 
         tf_graph = tf.get_default_graph()
-        self.weights = tf_graph.get_tensor_by_name('fc3' + '/kernel:0')
+        self.weights = tf_graph.get_tensor_by_name('fc3' + '/weights:0')
 
         self.logits = net
         self.prediction = tf.nn.softmax(self.logits)
@@ -86,7 +85,7 @@ class CNN_cifar:
 
             print("EPOCH STATISTICS : ")
             # train_loss, train_preds = self.sess.run([self.loss, self.prediction], feed_dict={self.X: train_x, self.Y: train_y})
-            # train_acc, train_pr, train_m = data.eval_perf_multi(np.argmax(train_y, axis=1), np.argmax(train_preds, axis=1))
+            # train_acc, train_pr, train_m = dataset.eval_perf_multi(np.argmax(train_y, axis=1), np.argmax(train_preds, axis=1))
             # print("Train error: epoch {} loss={} accuracy={} precision={}".format(epoch_num, train_loss, train_acc, train_pr[0][0]))
 
             valid_loss, valid_preds = self.sess.run([self.loss, self.prediction], feed_dict={self.X: valid_x, self.Y: valid_y})

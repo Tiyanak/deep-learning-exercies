@@ -31,12 +31,12 @@ def plot_training_progress(save_dir, data):
   x_data = np.linspace(1, num_points, num_points)
 
   ax1.set_title('Cross-entropy loss')
-  # ax1.plot(x_data, data['train_loss'], marker='o', color=train_color, linewidth=linewidth, linestyle='-', label='train')
+  # ax1.plot(x_data, dataset['train_loss'], marker='o', color=train_color, linewidth=linewidth, linestyle='-', label='train')
   ax1.plot(x_data, data['valid_loss'], marker='o', color=val_color, linewidth=linewidth, linestyle='-', label='validation')
   ax1.legend(loc='upper right', fontsize=legend_size)
 
   ax2.set_title('Average class accuracy')
-  # ax2.plot(x_data, data['train_acc'], marker='o', color=train_color, linewidth=linewidth, linestyle='-', label='train')
+  # ax2.plot(x_data, dataset['train_acc'], marker='o', color=train_color, linewidth=linewidth, linestyle='-', label='train')
   ax2.plot(x_data, data['valid_acc'], marker='o', color=val_color, linewidth=linewidth, linestyle='-', label='validation')
   ax2.legend(loc='upper left', fontsize=legend_size)
 
