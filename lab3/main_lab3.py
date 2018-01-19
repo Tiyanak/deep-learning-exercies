@@ -11,7 +11,7 @@ def main():
 
     langModel = LanguageModel()
 
-    langModel.run_language_model(dataset, 30)
+    langModel.run_language_model(dataset)
 
 if __name__ == "__main__":
 

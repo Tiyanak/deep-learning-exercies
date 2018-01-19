@@ -55,12 +55,12 @@ class RBM():
         self.dw = (self.w_positive_grad - self.w_negative_grad) / tf.to_float(tf.shape(self.X)[0])
 
         self.update_w = tf.assign_add(self.w, self.alpha * self.dw)
-        self.update_vb = tf.assign_add(self.vb, self.alpha * tf.reduce_mean(self.X - self.v_prob, 0))
+        self.update_vb = tf.assign_add(self.vb, self.alpha * tf.reduce_mean(self.X - self.v, 0))
         self.update_hb = tf.assign_add(self.hb, self.alpha * tf.reduce_mean(self.h0 - self.h, 0))
 
         self.out = (self.update_w, self.update_vb, self.update_hb)
 
-        self.v_prob = tf.nn.sigmoid(tf.matmul(self.h0, tf.transpose(self.w)) + self.vb) # dopuniti
+        self.v_prob = tf.nn.sigmoid(tf.matmul(self.h, tf.transpose(self.w)) + self.vb) # dopuniti
         self.v = utils.sample_prob(self.v_prob) # dopuniti
 
         self.err = self.X - self.v_prob
@@ -99,14 +99,14 @@ class RBM():
     def visualize(self, w, vb, vr, hs):
 
         # vizualizacija težina
-        utils.draw_weights(w, self.v_shape, self.Nh, self.h_shape, name="weights.png")
+        utils.draw_weights(w, self.v_shape, self.Nh, self.h_shape, name="rbm_weights.png")
 
         # vizualizacija rekonstrukcije i stanja
-        utils.draw_reconstructions(self.test_x, vr, hs, self.v_shape, self.h_shape, 20, name="reconstructions.png")
+        utils.draw_reconstructions(self.test_x, vr, hs, self.v_shape, self.h_shape, 20, name="rbm_reconstructions.png")
 
         self.reconstruct(0, hs, self.test_x, w, vb)  # prvi argument je indeks znamenke u matrici znamenki
 
-        self.draw_weights_freq(hs, w)
+        utils.draw_weights_freq(hs, w, self.v_shape, self.h_shape, self.Nh, name="rbm_weights_freq.png")
 
         r_input = self.generate_patterns()
 
@@ -116,7 +116,7 @@ class RBM():
         for i in range(1000):
             out_prob, out, hout = self.sess.run((self.v_prob, self.v, self.h), feed_dict={self.X: out})
 
-        utils.draw_generated(r_input, hout, out_prob, self.v_shape, self.h_shape, 50, name="generated.png")
+        utils.draw_generated(r_input, hout, out_prob, self.v_shape, self.h_shape, 50, name="rbm_generated.png")
 
     def generate_patterns(self):
 
@@ -150,22 +150,6 @@ class RBM():
         r_input[i, i] = s
 
         return r_input
-
-    def draw_weights_freq(self, h1s, w1s, name):
-
-        # Vjerojatnost da je skriveno stanje ukljuceno kroz Nu ulaznih uzoraka
-        plt.figure()
-        tmp = (h1s.sum(0) / h1s.shape[0]).reshape(self.h_shape)
-        plt.imshow(tmp, vmin=0, vmax=1, interpolation="nearest")
-        plt.axis('off')
-        plt.colorbar()
-        plt.title('vjerojatnosti (ucestalosti) aktivacije pojedinih neurona skrivenog sloja')
-
-        # Vizualizacija težina sortitranih prema ucestalosti
-        tmp_ind = (-tmp).argsort(None)
-        utils.draw_weights(w1s[:, tmp_ind], self.v_shape, self.Nh, self.h_shape, name="visualize_weights.png")
-        plt.title('Sortirane matrice tezina - od najucestalijih do najmanje koristenih')
-        plt.savefig(name)
 
     def reconstruct(self, ind, states, orig, weights, biases):
 

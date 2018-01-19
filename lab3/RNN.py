@@ -129,6 +129,12 @@ class RNN():
 
     def update(self, dU, dW, db, dV, dc, delta=1e-6):
 
+        dU = np.clip(dU, -5, 5)
+        dW = np.clip(dW, -5, 5)
+        db = np.clip(db, -5, 5)
+        dV = np.clip(dV, -5, 5)
+        dc = np.clip(dc, -5, 5)
+
         self.memory_U += (dU * dU)
         self.memory_W += (dW * dW)
         self.memory_b += (db * db)
@@ -150,13 +156,6 @@ class RNN():
         h, cache = self.rnn_forward(x, h, self.U, self.W, self.b) # h (returned) - (batch_size x seq_len x hidden_size)
         loss, dh, dV, dc = self.output_loss_and_grads(h, self.V, self.c, y)
         dU, dW, db = self.rnn_backward(dh, cache)
-
-        dU = np.clip(dU, -5, 5)
-        dW = np.clip(dW, -5, 5)
-        db = np.clip(db, -5, 5)
-        dV = np.clip(dV, -5, 5)
-        dc = np.clip(dc, -5, 5)
-
         self.update(dU, dW, db, dV, dc, delta=1e-7)
 
         return loss, h[:, -1, :]

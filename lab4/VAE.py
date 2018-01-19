@@ -4,7 +4,6 @@ from lab4 import utils
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 
 class VAE():
 
@@ -60,47 +59,39 @@ class VAE():
     def init_model(self):
 
         # definicije ulaznog tenzora
-        self.x = tf.placeholder(tf.float32, [None, self.n_input]) # dopuniti
+        self.x = tf.placeholder("float", [None, self.n_input]) # dopuniti
 
         # definirajte enkoiderski dio
-        layer_e1 = self.vae_layer(self.x, self.n_input, self.n_hidden_recog_1, 'layer_e1')
-        layer_e2 = self.vae_layer(layer_e1, self.n_hidden_recog_1, self.n_hidden_recog_2, 'layer_e2') # dopuniti
+        self.layer_e1 = self.vae_layer(self.x, self.n_input, self.n_hidden_recog_1, 'layer_e1')
+        self.layer_e2 = self.vae_layer(self.layer_e1, self.n_hidden_recog_1, self.n_hidden_recog_2, 'layer_e2') # dopuniti
 
         with tf.name_scope('z'):
             # definirajte skrivene varijable i pripadajuci generator šuma
-            self.z_mean = self.vae_layer(layer_e2, self.n_hidden_recog_2, self.n_z, 'z_mean', act=tf.identity)
-            self.z_log_sigma_sq = self.vae_layer(layer_e2, self.n_hidden_recog_2, self.n_z, 'z_sigma', act=tf.identity) # dopuniti
-            eps = tf.random_normal((self.batch_size, self.n_z), 0, 1, dtype=tf.float32)
+            self.z_mean = self.vae_layer(self.layer_e2, self.n_hidden_recog_2, self.n_z, 'z_mean', act=tf.identity)
+            self.z_sigma = self.vae_layer(self.layer_e2, self.n_hidden_recog_2, self.n_z, 'z_sigma', act=tf.identity)
+            self.z_sigma_sq = tf.square(self.z_sigma)
+            self.z_log_sigma_sq = tf.log(self.z_sigma_sq)
+            self.eps = tf.random_normal((self.batch_size, self.n_z), 0, 1, dtype=tf.float32)
 
-            self.z = tf.add(self.z_mean, tf.multiply(tf.sqrt(tf.exp(self.z_log_sigma_sq)), eps))
+            self.z = tf.add(self.z_mean, tf.multiply(self.z_sigma, self.eps))
             tf.summary.histogram('activations', self.z)
 
         # definirajte dekoderski dio
-        layer_d1 = self.vae_layer(self.z, self.n_z, self.n_hidden_gener_1, 'layer_d1')
-        layer_d2 = self.vae_layer(layer_d1, self.n_hidden_gener_1, self.n_hidden_gener_2, 'layer_d2') # dopuniti
+        self.layer_d1 = self.vae_layer(self.z, self.n_z, self.n_hidden_gener_1, 'layer_d1')
+        self.layer_d2 = self.vae_layer(self.layer_d1, self.n_hidden_gener_1, self.n_hidden_gener_2, 'layer_d2') # dopuniti
 
         # definirajte srednju vrijednost rekonstrukcije
-        x_reconstr_mean = self.vae_layer(layer_d2, self.n_hidden_gener_2, self.n_input, 'layer_decoder', act=tf.identity) # dopuniti
+        self.x_reconstr_mean = self.vae_layer(self.layer_d2, self.n_hidden_gener_2, self.n_input, 'vae_out', act=tf.identity) # dopuniti
 
-        self.x_reconstr_mean_out = tf.nn.sigmoid(x_reconstr_mean)
+        self.x_reconstr_mean_out = tf.nn.sigmoid(self.x_reconstr_mean)
 
         # definirajte dvije komponente funkcije cijene
         with tf.name_scope('cost'):
-            cost1 = tf.reduce_sum(tf.nn.sigmoid_cross_entropy_with_logits(logits=x_reconstr_mean, labels=self.x), axis=1) # dopuniti
-            tf.summary.histogram('cross_entropy', cost1)
-
-            # z_sigma_sq = self.z_log_sigma_sq * self.z_log_sigma_sq # izmisljeno - pregledat dobro
-            # cost2 = -0.5 * (1 + tf.log(z_sigma_sq) - self.z_mean * self.z_mean - z_sigma_sq) # dopuniti
-
-            # tf.summary.histogram('D_KL', cost2)
-            # self.cost = tf.reduce_mean(tf.reduce_sum(cost1, 1) + tf.reduce_sum(cost2, 1))  # average over batch
-
-            # google says : change this!
-            z_sigma_sq = self.z_log_sigma_sq * self.z_log_sigma_sq
-            cost_kl = -0.5 * (1 + tf.log(z_sigma_sq) - self.z_mean * self.z_mean - z_sigma_sq)
-            cost2 = tf.reduce_sum(cost_kl, axis=1)
-            self.cost = tf.reduce_mean(cost1 + cost2)
-
+            self.cost1 = tf.nn.sigmoid_cross_entropy_with_logits(labels=self.x, logits=self.x_reconstr_mean)  # dopuniti - E[log(p(x|z))]
+            tf.summary.histogram('cross_entropy', self.cost1)
+            self.cost2 = -0.5 * (1 + self.z_log_sigma_sq - tf.square(self.z_mean) - self.z_sigma_sq) # dopuniti - -Dkl(q(z|x)||p(z))
+            tf.summary.histogram('D_KL', self.cost2)
+            self.cost = tf.reduce_mean(tf.reduce_sum(self.cost1, 1) + tf.reduce_sum(self.cost2, 1))  # average over batch
             tf.summary.histogram('cost', self.cost)
 
         # ADAM optimizer
@@ -125,8 +116,12 @@ class VAE():
 
             for i in range(self.total_batch):
                 batch_xs, _ = self.mnist.train.next_batch(self.batch_size)
-                opt, cos = self.sess.run((self.optimizer, self.cost), feed_dict={self.x: batch_xs})
-                avg_cost += cos / self.n_samples * self.batch_size
+
+                opt, z_mean, z_sigma, z, x_reconstr_mean_out, cost1, cost2, cost = \
+                    self.sess.run((self.optimizer, self.z_mean, self.z_sigma, self.z,
+                                   self.x_reconstr_mean_out, self.cost1, self.cost2, self.cost), feed_dict={self.x: batch_xs})
+
+                avg_cost += cost / self.n_samples * self.batch_size
 
             # Display logs per epoch step
             if epoch % (int(self.n_epochs / 10)) == 0:
@@ -145,7 +140,7 @@ class VAE():
 
         self.visualize_reconstruction_and_state()
         self.visualize_test_sample_hidden()
-        self.fill_results_for_grid()
+        # self.fill_results_for_grid()
 
     # vizualizacija rekonstrukcije i stanja
     def visualize_reconstruction_and_state(self):
@@ -161,12 +156,13 @@ class VAE():
         z_mu, z_sigma = self.sess.run((self.z_mean, self.z_log_sigma_sq), feed_dict={self.x: x_sample})
 
         utils.plot_latent(z_mu, y_sample)
-        utils.save_latent_plot('trt.png')
+        utils.save_latent_plot('vae_trt.png')
 
         fig = plt.figure(figsize=(15, 4)) # Vizualizacija ugašenih elemenata skrivenog sloja - 1. nacin
         utils.boxplot_vis(fig, 1, z_mu, 'Z mean values', 'Z elemets') # Vizualizacija statistike za z_mean
         self.visualize_stat_z_sigma(fig, z_sigma) # Vizualizacija statistike za z_sigma
         self.visualize_weight_stat_decoder_input(fig, z_mu) # Vizualizacija statistike za težine ulaza u dekoder
+        plt.savefig("vae_visualize_stats.png")
 
     # Vizualizacija statistike za z_sigma
     def visualize_stat_z_sigma(self, fig, z_sigma):
@@ -182,7 +178,7 @@ class VAE():
         utils.boxplot_vis(fig, 3, weights_d1.T, 'Weights to decoder', 'Z elemets')
 
         # Vizualizacija ugašenih elemenata skrivenog sloja - 2. nacin
-        self.visualize_off_hidden(z_mu, weights_d1)
+        # self.visualize_off_hidden(z_mu, weights_d1)
 
     # Vizualizacija ugašenih elemenata skrivenog sloja - 2. nacin
     def visualize_off_hidden(self, z_mu, weights_d1):

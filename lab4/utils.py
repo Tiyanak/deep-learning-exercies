@@ -362,3 +362,19 @@ def bargraph_vis(fig, pos, input_data, dims, color, labels):
     ax.set_xlabel(labels[0])
     ax.set_ylabel(labels[1])
     ax.set_zlabel(labels[2])
+
+def draw_weights_freq(h, w, v_shape, h_shape, Nh, name):
+
+    # Vjerojatnost da je skriveno stanje ukljuceno kroz Nu ulaznih uzoraka
+    plt.figure()
+    tmp = (h.sum(0) / h.shape[0]).reshape(h_shape)
+    plt.imshow(tmp, vmin=0, vmax=1, interpolation="nearest")
+    plt.axis('off')
+    plt.colorbar()
+    plt.title('vjerojatnosti (ucestalosti) aktivacije pojedinih neurona skrivenog sloja')
+
+    # Vizualizacija težina sortitranih prema ucestalosti
+    tmp_ind = (-tmp).argsort(None)
+    draw_weights(w[:, tmp_ind], v_shape, Nh, h_shape, name="visualize_weights.png")
+    plt.title('Sortirane matrice tezina - od najucestalijih do najmanje koristenih')
+    plt.savefig(name)
