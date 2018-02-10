@@ -21,7 +21,7 @@ class DBN_Fine_Tune():
         self.h2_shape = (10, 10)  # 2D prikaz broja stanja
 
         self.Nu = 5000  # broj uzoraka za vizualizaciju rekonstrukcije
-        self.gibbs_sampling_steps = 1
+        self.gibbs_sampling_steps = 2
         self.alpha = 1
         self.beta = 0.01
         self.batch_size = 100
